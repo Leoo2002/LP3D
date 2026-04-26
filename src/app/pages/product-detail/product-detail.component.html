@@ -1,0 +1,164 @@
+<div class="detail-page">
+  <div class="container">
+
+    <!-- LOADING -->
+    @if (loading()) {
+      <div class="loading-state">
+        <div class="skeleton" style="height:400px;border-radius:12px;margin-bottom:2rem"></div>
+        <div class="skeleton" style="height:32px;width:50%;margin-bottom:1rem"></div>
+        <div class="skeleton" style="height:20px;width:80%;margin-bottom:0.5rem"></div>
+        <div class="skeleton" style="height:20px;width:60%"></div>
+      </div>
+    }
+
+    <!-- NOT FOUND -->
+    @if (!loading() && notFound()) {
+      <div class="not-found-state">
+        <div class="nf-icon">😕</div>
+        <h2>Producto no encontrado</h2>
+        <p>El producto que buscás no existe o fue eliminado.</p>
+        <a routerLink="/catalogo" class="btn btn-primary">Volver al catálogo</a>
+      </div>
+    }
+
+    <!-- PRODUCT DETAIL -->
+    @if (!loading() && product()) {
+      <!-- BREADCRUMB -->
+      <nav class="breadcrumb">
+        <a routerLink="/">Inicio</a>
+        <span>›</span>
+        <a routerLink="/catalogo">Catálogo</a>
+        <span>›</span>
+        <span>{{ product()!.name }}</span>
+      </nav>
+
+      <div class="detail-layout">
+        <!-- LEFT: IMAGE -->
+        <div class="detail-image-panel">
+          <div class="main-image">
+            <img [src]="product()!.images[0]" [alt]="product()!.name" loading="eager">
+          </div>
+          <div class="product-specs-mini">
+            <div class="spec-item">
+              <span class="spec-icon">🧵</span>
+              <div>
+                <span class="spec-label">Material</span>
+                <span class="spec-value">{{ product()!.material }}</span>
+              </div>
+            </div>
+            <div class="spec-item">
+              <span class="spec-icon">⚖️</span>
+              <div>
+                <span class="spec-label">Peso</span>
+                <span class="spec-value">{{ product()!.weight }}g</span>
+              </div>
+            </div>
+            <div class="spec-item">
+              <span class="spec-icon">⏱️</span>
+              <div>
+                <span class="spec-label">Tiempo estimado</span>
+                <span class="spec-value">{{ product()!.printTime }}hs</span>
+              </div>
+            </div>
+            <div class="spec-item">
+              <span class="spec-icon">📦</span>
+              <div>
+                <span class="spec-label">Stock</span>
+                <span class="spec-value" [class.low-stock]="product()!.stock < 5">
+                  {{ product()!.stock > 0 ? product()!.stock + ' disponibles' : 'Sin stock' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: INFO -->
+        <div class="detail-info-panel">
+          <div class="detail-badges">
+            <span class="badge badge-primary category-badge">{{ product()!.category }}</span>
+            @if (product()!.featured) {
+              <span class="badge" style="background:#fff3cd;color:#856404">⭐ Destacado</span>
+            }
+          </div>
+
+          <h1 class="detail-title">{{ product()!.name }}</h1>
+
+          <div class="detail-rating">
+            <div class="stars-row">
+              @for (star of renderStars(product()!.rating); track $index) {
+                <span [class]="star === 'full' ? 'star full' : 'star empty'">★</span>
+              }
+            </div>
+            <span class="rating-text">{{ product()!.rating }} · {{ product()!.reviews }} reseñas</span>
+          </div>
+
+          <!-- PRICE -->
+          <div class="detail-price-block">
+            <span class="detail-price">{{ formatPrice(currentPrice) }}</span>
+            @if (isWholesalePrice) {
+              <span class="wholesale-badge">🎉 Precio mayorista aplicado</span>
+            } @else if (product()!.minWholesaleQty > 1) {
+              <span class="wholesale-notice">
+                Comprá {{ product()!.minWholesaleQty }} o más → {{ formatPrice(product()!.priceWholesale) }} c/u
+              </span>
+            }
+          </div>
+
+          <p class="detail-description">{{ product()!.description }}</p>
+
+          <!-- COLOR SELECTOR -->
+          <div class="detail-section">
+            <label class="detail-label">Color: <strong>{{ selectedColor() }}</strong></label>
+            <div class="color-selector">
+              @for (color of product()!.colors; track color) {
+                <button
+                  class="color-btn"
+                  [class.active]="selectedColor() === color"
+                  (click)="selectColor(color)">
+                  {{ color }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- QUANTITY -->
+          <div class="detail-section">
+            <label class="detail-label">Cantidad:</label>
+            <div class="quantity-control">
+              <button class="qty-btn" (click)="changeQuantity(-1)" [disabled]="quantity() <= 1">−</button>
+              <span class="qty-display">{{ quantity() }}</span>
+              <button class="qty-btn" (click)="changeQuantity(1)">+</button>
+            </div>
+          </div>
+
+          <!-- ADD TO CART -->
+          <div class="detail-actions">
+            <button class="btn btn-add-cart" [class.added]="addedToCart()" (click)="addToCart()">
+              @if (addedToCart()) {
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                ¡Agregado al carrito!
+              } @else {
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+                </svg>
+                Agregar al carrito · {{ formatPrice(currentPrice * quantity()) }}
+              }
+            </button>
+            <a routerLink="/carrito" class="btn btn-secondary">Ver carrito</a>
+          </div>
+
+          <!-- TAGS -->
+          @if (product()!.tags.length > 0) {
+            <div class="detail-tags">
+              @for (tag of product()!.tags; track tag) {
+                <span class="tag-chip">#{{ tag }}</span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

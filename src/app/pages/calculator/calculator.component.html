@@ -1,0 +1,358 @@
+<div class="calculator-page">
+
+  <!-- LOGIN FORM (when not authenticated) -->
+  @if (!authService.isCalculatorAuthenticated()) {
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-icon">🔐</div>
+        <h1 class="login-title">Calculadora de Costos</h1>
+        <p class="login-subtitle">Acceso exclusivo para uso interno de LP3D</p>
+
+        <form class="login-form" (submit)="tryLogin(); $event.preventDefault()">
+          <div class="form-group">
+            <label class="form-label">Contraseña de acceso</label>
+            <input
+              type="password"
+              class="form-control"
+              placeholder="Ingresá la contraseña..."
+              [value]="loginPassword()"
+              (input)="loginPassword.set($any($event.target).value)"
+              [class.error]="loginError()"
+              autofocus>
+          </div>
+          @if (loginError()) {
+            <div class="login-error">
+              ❌ Contraseña incorrecta. Intentá nuevamente.
+            </div>
+          }
+          <button type="submit" class="btn btn-primary btn-login">
+            Acceder a la calculadora
+          </button>
+        </form>
+
+        <a routerLink="/" class="back-link">← Volver al inicio</a>
+      </div>
+    </div>
+  }
+
+  <!-- CALCULATOR (when authenticated) -->
+  @if (authService.isCalculatorAuthenticated()) {
+    <div class="container">
+      <!-- HEADER -->
+      <div class="calc-header">
+        <div class="calc-header-left">
+          <h1 class="calc-title">🖨️ Calculadora de Costos</h1>
+          <p class="calc-subtitle">Calcula el precio de tus impresiones 3D</p>
+        </div>
+        <button class="btn btn-ghost btn-logout" (click)="cerrarSesion()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+          </svg>
+          Cerrar sesión
+        </button>
+      </div>
+
+      <!-- TOP ROW: COSTOS OPERATIVOS + PIEZAS + GANANCIA -->
+      <div class="calc-top-grid">
+
+        <!-- COSTOS OPERATIVOS -->
+        <div class="calc-card">
+          <div class="card-header">
+            <span class="card-icon">💰</span>
+            <h2 class="card-title">Costos Operativos</h2>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Impresora 3D</label>
+            <select class="form-control"
+              [ngModel]="selectedImpresora()"
+              (ngModelChange)="onImpresoraChange($event)">
+              @for (imp of impresoras; track $index) {
+                <option [value]="$index">{{ imp.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label">Precio kg filamento</label>
+              <div class="input-with-prefix">
+                <span class="input-prefix">$</span>
+                <input type="number" class="form-control" [ngModel]="precioKg()" (ngModelChange)="precioKg.set($event)" min="0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tarifa eléctrica</label>
+              <select class="form-control"
+                [ngModel]="selectedTarifa()"
+                (ngModelChange)="onTarifaChange($event)">
+                @for (tarifa of tarifasKwh; track $index) {
+                  <option [value]="$index">{{ tarifa.nombre }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="tarifa-hint">
+            <small>💡 KWh actual: <strong>${{ precioKwh() }}</strong> · Tarifas AR actualizadas</small>
+          </div>
+
+          <div class="form-grid-2x2">
+            <div class="form-group">
+              <label class="form-label">Consumo W/hora</label>
+              <input type="number" class="form-control" [ngModel]="consumoW()" (ngModelChange)="consumoW.set($event)" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Vida útil máquina (hs)</label>
+              <input type="number" class="form-control" [ngModel]="vidaUtilHs()" (ngModelChange)="vidaUtilHs.set($event)" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Costo repuestos (ARS)</label>
+              <div class="input-with-prefix">
+                <span class="input-prefix">$</span>
+                <input type="number" class="form-control" [ngModel]="costoRepuestos()" (ngModelChange)="costoRepuestos.set($event)" min="0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Margen de error (%)</label>
+              <input type="number" class="form-control" [ngModel]="margenError()" (ngModelChange)="margenError.set($event)" min="0" max="200">
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="calc-right-col">
+
+          <!-- DATOS DE IMPRESION -->
+          <div class="calc-card">
+            <div class="card-header">
+              <span class="card-icon">📋</span>
+              <h2 class="card-title">Datos de Impresión</h2>
+            </div>
+
+            @for (pieza of piezas(); track $index; let i = $index) {
+              <div class="pieza-block" [class.multi]="piezas().length > 1">
+                @if (piezas().length > 1) {
+                  <div class="pieza-header">
+                    <span class="pieza-label">Pieza {{ i + 1 }}</span>
+                    <button class="btn-remove-pieza" (click)="eliminarPieza(i)" title="Eliminar pieza">✕</button>
+                  </div>
+                }
+
+                <div class="form-group">
+                  <label class="form-label">Nombre (opcional)</label>
+                  <input type="text" class="form-control" placeholder="Ej: Macetero geométrico"
+                    [ngModel]="pieza.nombre"
+                    (ngModelChange)="updatePieza(i, 'nombre', $event)">
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Tiempo de impresión</label>
+                  <div class="time-selector">
+                    <select class="form-control"
+                      [ngModel]="pieza.horasImpresion"
+                      (ngModelChange)="updatePieza(i, 'horasImpresion', $event)">
+                      @for (h of horasOptions; track h) {
+                        <option [value]="h">{{ h }}h</option>
+                      }
+                    </select>
+                    <span class="time-sep">:</span>
+                    <select class="form-control"
+                      [ngModel]="pieza.minutosImpresion"
+                      (ngModelChange)="updatePieza(i, 'minutosImpresion', $event)">
+                      @for (m of minutosOptions; track m) {
+                        <option [value]="m">{{ m }}min</option>
+                      }
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-row-2">
+                  <div class="form-group">
+                    <label class="form-label">Gramos filamento</label>
+                    <input type="number" class="form-control" min="0"
+                      [ngModel]="pieza.gramosFilamento"
+                      (ngModelChange)="updatePieza(i, 'gramosFilamento', $event)">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Materiales extras ($)</label>
+                    <div class="input-with-prefix">
+                      <span class="input-prefix">$</span>
+                      <input type="number" class="form-control" min="0"
+                        [ngModel]="pieza.materialesExtras"
+                        (ngModelChange)="updatePieza(i, 'materialesExtras', $event)">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- GANANCIA -->
+          <div class="calc-card">
+            <div class="card-header">
+              <span class="card-icon">📈</span>
+              <h2 class="card-title">Ganancia</h2>
+            </div>
+
+            <div class="toggle-row">
+              <span class="toggle-label">Multiplicador manual</span>
+              <label class="toggle-switch">
+                <input type="checkbox"
+                  [checked]="multiplicadorManual()"
+                  (change)="multiplicadorManual.set($any($event.target).checked)">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+
+            @if (!multiplicadorManual()) {
+              <div class="form-group">
+                <label class="form-label">Tipo de precio</label>
+                <select class="form-control"
+                  [ngModel]="selectedMultiplicador()"
+                  (ngModelChange)="selectedMultiplicador.set($event)">
+                  @for (mult of multiplicadores; track $index) {
+                    <option [value]="$index">{{ mult.nombre }}</option>
+                  }
+                </select>
+              </div>
+            } @else {
+              <div class="form-group">
+                <label class="form-label">Multiplicador personalizado</label>
+                <input type="number" class="form-control" min="1" step="0.1"
+                  [ngModel]="multiplicadorCustom()"
+                  (ngModelChange)="multiplicadorCustom.set($event)">
+              </div>
+            }
+
+            <div class="multiplicador-badge">
+              Multiplicador activo: <strong>×{{ multiplicadorActivo }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COSTOS FIJOS (collapsible) -->
+      <div class="costos-fijos-panel">
+        <button class="costos-fijos-header" (click)="toggleCostosFijos()">
+          <span>⚙️ Costos Fijos e Impuestos <small>(opcional)</small></span>
+          <span class="expand-arrow" [class.open]="costosFijosExpanded()">▾</span>
+        </button>
+        <div class="costos-fijos-body" [class.open]="costosFijosExpanded()">
+          <div class="form-grid-4">
+            <div class="form-group">
+              <label class="form-label">Alquiler mensual ($)</label>
+              <div class="input-with-prefix">
+                <span class="input-prefix">$</span>
+                <input type="number" class="form-control" [ngModel]="alquilerMensual()" (ngModelChange)="alquilerMensual.set($event)" min="0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ARCA mensual ($)</label>
+              <div class="input-with-prefix">
+                <span class="input-prefix">$</span>
+                <input type="number" class="form-control" [ngModel]="arcaMensual()" (ngModelChange)="arcaMensual.set($event)" min="0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ingresos Brutos ($)</label>
+              <div class="input-with-prefix">
+                <span class="input-prefix">$</span>
+                <input type="number" class="form-control" [ngModel]="ingresosBrutosMensual()" (ngModelChange)="ingresosBrutosMensual.set($event)" min="0">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Horas/mes de máquina</label>
+              <input type="number" class="form-control" [ngModel]="horasMensualesMaquina()" (ngModelChange)="horasMensualesMaquina.set($event)" min="1">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTION BUTTONS -->
+      <div class="calc-actions">
+        <button class="btn btn-calcular" (click)="calcular()">
+          🧮 Calcular precio
+        </button>
+        <button class="btn btn-secondary" (click)="agregarPieza()">
+          + Agregar pieza
+        </button>
+        <button class="btn btn-ghost" (click)="limpiar()">
+          🗑️ Limpiar
+        </button>
+      </div>
+
+      <!-- RESULTS -->
+      @if (calculado()) {
+        <div class="results-section">
+          <h2 class="results-title">📊 Resultados del Cálculo</h2>
+
+          @for (resultado of resultados(); track $index; let i = $index) {
+            <div class="result-card">
+              <div class="result-card-header">
+                <h3 class="result-name">
+                  {{ resultado.pieza.nombre || ('Pieza ' + (i + 1)) }}
+                </h3>
+                <div class="result-header-actions">
+                  <span class="result-time">
+                    {{ resultado.pieza.horasImpresion }}h {{ resultado.pieza.minutosImpresion }}min
+                    · {{ resultado.pieza.gramosFilamento }}g
+                  </span>
+                </div>
+              </div>
+
+              <div class="metrics-row">
+                <div class="metric-box">
+                  <span class="metric-label">COSTO BASE</span>
+                  <span class="metric-value">${{ resultado.costoBase.toLocaleString('es-AR') }}</span>
+                </div>
+                <div class="metric-arrow">→</div>
+                <div class="metric-box">
+                  <span class="metric-label">+ MARGEN ({{ margenError() }}%)</span>
+                  <span class="metric-value">${{ resultado.costoConMargen.toLocaleString('es-AR') }}</span>
+                </div>
+                <div class="metric-arrow">→</div>
+                <div class="metric-box metric-final">
+                  <span class="metric-label">PRECIO FINAL ×{{ multiplicadorActivo }}</span>
+                  <span class="metric-value">${{ resultado.precioFinal.toLocaleString('es-AR') }}</span>
+                </div>
+              </div>
+
+              <div class="result-actions">
+                <button class="btn btn-secondary btn-sm" (click)="copiarResultado(resultado, i)">
+                  @if (copiado() === i) { ✓ Copiado } @else { 📋 Copiar resultado }
+                </button>
+                <button class="btn btn-primary btn-sm" (click)="agregarAlPresupuesto(resultado)">
+                  + Agregar al presupuesto
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- PRESUPUESTO ACUMULADO -->
+      @if (presupuesto().length > 0) {
+        <div class="budget-section">
+          <h2 class="results-title">📁 Presupuesto Acumulado</h2>
+          <div class="budget-card">
+            @for (item of presupuesto(); track $index; let i = $index) {
+              <div class="budget-line">
+                <span class="budget-name">{{ item.pieza.nombre || ('Pieza ' + (i + 1)) }}</span>
+                <span class="budget-price">${{ item.precioFinal.toLocaleString('es-AR') }}</span>
+                <button class="btn-remove-budget" (click)="eliminarDelPresupuesto(i)">✕</button>
+              </div>
+            }
+            <div class="budget-total">
+              <span>TOTAL DEL PRESUPUESTO</span>
+              <span class="budget-total-price">${{ totalPresupuesto.toLocaleString('es-AR') }}</span>
+            </div>
+            <button class="btn btn-secondary" style="width:100%" (click)="copiarPresupuesto()">
+              📋 Copiar presupuesto completo
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

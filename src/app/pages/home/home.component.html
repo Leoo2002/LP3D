@@ -1,0 +1,225 @@
+<!-- HERO SECTION -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="container hero-container">
+    <div class="hero-content">
+      <div class="hero-badge">🖨️ Tecnología FDM de alta calidad</div>
+      <h1 class="hero-title">
+        Impresiones 3D<br>
+        <span class="hero-title-accent">Únicas</span>
+      </h1>
+      <p class="hero-subtitle">
+        Creamos piezas personalizadas con filamentos de primera calidad.
+        Del diseño a tu puerta en tiempo récord.
+      </p>
+      <div class="hero-cta">
+        <a routerLink="/catalogo" class="btn btn-primary btn-lg">
+          Ver Catálogo
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a routerLink="/calculadora" class="btn btn-outline-white btn-lg">
+          Cotizar Piezas
+        </a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="cube-wrapper">
+        <svg viewBox="0 0 200 200" class="hero-cube" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#e53935;stop-opacity:0.8"/>
+              <stop offset="100%" style="stop-color:#c62828;stop-opacity:0.4"/>
+            </linearGradient>
+          </defs>
+          <!-- Outer hexagon -->
+          <polygon points="100,15 170,55 170,145 100,185 30,145 30,55" fill="none" stroke="rgba(229,57,53,0.3)" stroke-width="1.5"/>
+          <!-- Middle hexagon -->
+          <polygon points="100,35 150,63 150,137 100,165 50,137 50,63" fill="rgba(229,57,53,0.08)" stroke="rgba(229,57,53,0.5)" stroke-width="1.5"/>
+          <!-- Inner hexagon -->
+          <polygon points="100,55 130,72 130,128 100,145 70,128 70,72" fill="rgba(229,57,53,0.15)" stroke="rgba(229,57,53,0.7)" stroke-width="2"/>
+          <!-- Core -->
+          <polygon points="100,75 118,85 118,115 100,125 82,115 82,85" fill="url(#g1)" stroke="#e53935" stroke-width="2"/>
+          <!-- Center dot -->
+          <circle cx="100" cy="100" r="8" fill="#e53935"/>
+          <!-- Lines -->
+          <line x1="100" y1="75" x2="100" y2="15" stroke="rgba(229,57,53,0.3)" stroke-width="1" stroke-dasharray="3,4"/>
+          <line x1="118" y1="85" x2="170" y2="55" stroke="rgba(229,57,53,0.3)" stroke-width="1" stroke-dasharray="3,4"/>
+          <line x1="118" y1="115" x2="170" y2="145" stroke="rgba(229,57,53,0.3)" stroke-width="1" stroke-dasharray="3,4"/>
+          <line x1="100" y1="125" x2="100" y2="185" stroke="rgba(229,57,53,0.3)" stroke-width="1" stroke-dasharray="3,4"/>
+          <line x1="82" y1="115" x2="30" y2="145" stroke="rgba(229,57,53,0.3)" stroke-width="1" stroke-dasharray="3,4"/>
+          <line x1="82" y1="85" x2="30" y2="55" stroke="rgba(229,57,53,0.3)" stroke-width="1" stroke-dasharray="3,4"/>
+        </svg>
+        <div class="cube-ring ring-1"></div>
+        <div class="cube-ring ring-2"></div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-indicator"></div>
+  </div>
+</section>
+
+<!-- STATS BAR -->
+<section class="stats-bar">
+  <div class="container">
+    <div class="stats-grid">
+      @for (stat of stats; track stat.value) {
+        <div class="stat-item">
+          <span class="stat-value">{{ stat.value }}</span>
+          <span class="stat-label">{{ stat.label }}</span>
+        </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES SECTION -->
+<section class="categories-section section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Explorá nuestras categorías</h2>
+      <p class="section-subtitle">Desde artículos del hogar hasta piezas industriales — lo imprimimos todo</p>
+    </div>
+    <div class="categories-grid">
+      @for (cat of categories; track cat.id) {
+        <a [routerLink]="['/catalogo']" [queryParams]="{categoria: cat.id}" class="category-card">
+          <span class="category-icon">{{ cat.icon }}</span>
+          <h3 class="category-name">{{ cat.name }}</h3>
+          <p class="category-desc">{{ cat.description }}</p>
+          <span class="category-arrow">→</span>
+        </a>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED PRODUCTS SECTION -->
+<section class="products-section section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Productos Destacados</h2>
+      <p class="section-subtitle">Los más elegidos por nuestros clientes</p>
+    </div>
+
+    @if (loading()) {
+      <div class="products-grid">
+        @for (i of [1,2,3,4]; track i) {
+          <div class="product-card skeleton-card">
+            <div class="skeleton product-image-skeleton"></div>
+            <div class="product-info">
+              <div class="skeleton" style="height:20px;width:70%;margin-bottom:8px"></div>
+              <div class="skeleton" style="height:14px;width:90%;margin-bottom:16px"></div>
+              <div class="skeleton" style="height:28px;width:40%"></div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="products-grid">
+        @for (product of featuredProducts(); track product.id) {
+          <div class="product-card">
+            <a [routerLink]="['/producto', product.id]" class="product-image-link">
+              <div class="product-image">
+                <img [src]="product.images[0]" [alt]="product.name" loading="lazy">
+                <div class="product-overlay">
+                  <span>Ver detalle</span>
+                </div>
+              </div>
+            </a>
+            <div class="product-info">
+              <div class="product-meta">
+                <span class="product-category badge badge-primary">{{ product.category }}</span>
+                <span class="product-rating">
+                  <span class="stars">★</span> {{ product.rating }}
+                </span>
+              </div>
+              <h3 class="product-name">{{ product.name }}</h3>
+              <p class="product-desc">{{ product.shortDescription }}</p>
+              <div class="product-footer">
+                <span class="product-price">{{ formatPrice(product.price) }}</span>
+                <div class="product-actions">
+                  <button class="btn btn-primary btn-sm"
+                          (click)="addToCart(product)"
+                          [class.added]="addedProductId() === product.id">
+                    @if (addedProductId() === product.id) {
+                      ✓ Agregado
+                    } @else {
+                      + Agregar
+                    }
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="products-cta">
+      <a routerLink="/catalogo" class="btn btn-secondary">
+        Ver todo el catálogo →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">¿Cómo funciona?</h2>
+      <p class="section-subtitle">Tres pasos simples para tener tu pieza en casa</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <div class="step-icon">🛒</div>
+        <h3 class="step-title">Elegís tu producto</h3>
+        <p class="step-desc">Navegá el catálogo, elegí el modelo, material y color que más te guste.</p>
+      </div>
+      <div class="step-divider">
+        <svg width="40" height="20" viewBox="0 0 40 20" fill="none">
+          <path d="M0 10h36M28 3l8 7-8 7" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <div class="step-icon">🖨️</div>
+        <h3 class="step-title">Lo armamos en 3D</h3>
+        <p class="step-desc">Imprimimos tu pieza con equipamiento de última generación y filamentos premium.</p>
+      </div>
+      <div class="step-divider">
+        <svg width="40" height="20" viewBox="0 0 40 20" fill="none">
+          <path d="M0 10h36M28 3l8 7-8 7" stroke="var(--primary)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <div class="step-icon">📦</div>
+        <h3 class="step-title">Te lo enviamos</h3>
+        <p class="step-desc">Empaquetamos con cuidado y enviamos a todo el país. Entrega rápida garantizada.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHATSAPP CTA -->
+<section class="whatsapp-cta">
+  <div class="container">
+    <div class="wa-content">
+      <div class="wa-text">
+        <h2 class="wa-title">¿Tenés un diseño propio?</h2>
+        <p class="wa-subtitle">Mandanos tu archivo STL y te cotizamos sin costo. Trabajamos con diseños personalizados, prototipos y piezas industriales.</p>
+      </div>
+      <a href="https://wa.me/5493512345678?text=Hola%20LP3D!%20Quiero%20cotizar%20un%20dise%C3%B1o%20propio."
+         target="_blank" rel="noopener" class="btn btn-outline-white btn-lg wa-btn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.49"/>
+        </svg>
+        Contactar por WhatsApp
+      </a>
+    </div>
+  </div>
+</section>
