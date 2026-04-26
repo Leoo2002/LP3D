@@ -1,11 +1,11 @@
 import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
 
-  private readonly CALCULATOR_PASSWORD = 'lp3d2024';
   private readonly SESSION_KEY = 'lp3d_calc_auth';
 
   isCalculatorAuthenticated = signal<boolean>(false);
@@ -20,7 +20,7 @@ export class AuthService {
   }
 
   loginCalculator(password: string): boolean {
-    const isValid = password === this.CALCULATOR_PASSWORD;
+    const isValid = password === environment.calculatorPassword;
     if (isValid) {
       this.isCalculatorAuthenticated.set(true);
       if (isPlatformBrowser(this.platformId)) {
