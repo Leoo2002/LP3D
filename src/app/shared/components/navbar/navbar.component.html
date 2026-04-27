@@ -1,0 +1,39 @@
+<nav class="navbar" [class.scrolled]="scrolled()">
+  <div class="nav-container">
+    <a routerLink="/" class="nav-logo" (click)="closeMenu()">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="14,2 26,8 26,20 14,26 2,20 2,8" fill="#e53935" opacity="0.15" stroke="#e53935" stroke-width="1.5"/>
+        <polygon points="14,6 22,10 22,18 14,22 6,18 6,10" fill="#e53935" opacity="0.3"/>
+        <polygon points="14,10 18,12 18,16 14,18 10,16 10,12" fill="#e53935"/>
+      </svg>
+      <span class="logo-text">LP<span class="logo-accent">3D</span></span>
+    </a>
+
+    <div class="nav-links" [class.menu-open]="menuOpen()">
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
+         class="nav-link" (click)="closeMenu()">Inicio</a>
+      <a routerLink="/catalogo" routerLinkActive="active"
+         class="nav-link" (click)="closeMenu()">Catálogo</a>
+      <a routerLink="/calculadora" routerLinkActive="active"
+         class="nav-link" (click)="closeMenu()">Calculadora</a>
+      <a routerLink="/carrito" routerLinkActive="active"
+         class="nav-link cart-link" (click)="closeMenu()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+        <span class="hide-mobile">Carrito</span>
+        @if (cartService.totalItems() > 0) {
+          <span class="cart-badge">{{ cartService.totalItems() }}</span>
+        }
+      </a>
+    </div>
+
+    <button class="hamburger" (click)="toggleMenu()" [class.open]="menuOpen()" aria-label="Toggle menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</nav>
